@@ -18,19 +18,45 @@ class NoteController extends Controller
         return view('welcome', compact('notes'));
     }
 
+     /**
+     * Display filtered listing of the resource for current user
+     */
+    public function usernotes()
+    {
+        if (Auth::check()) {
+            $user_id = Auth::user()->id;
+            $user = User::findOrFail($user_id);
+        }
+
+        $notes = Note::whereBelongsTo($user)->get();
+        return view('dashboard', compact('notes'));
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'text' => 'required',
+        ]);
+
+        $note = Note::create([
+            'user_id' => Auth::user()->id,
+            'text' => $request->text
+        ]);
+
+        $note->save();
+        return redirect('dashboard')->with('status', 'Note added successfully!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
-        //
+        $note = Note::findOrFail($id);
+        $note->delete();
+        return redirect('dashboard')->with('status', 'Note delete successfully!');
     }
 }
